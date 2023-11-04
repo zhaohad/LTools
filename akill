@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# 按进程名杀死Android进程
+
+function show_help() {
+    echo ""
+    echo "kill process"
+    echo "Usage:"
+    echo -e "\takill -p [process_name]"
+    echo -e "\nExample:"
+    echo -e "\takill -p arservice"
+    echo ""
+}
+
+OPT_PROCESS=
+
+while getopts "hp:" opt; do
+    case "$opt" in
+        h)
+            show_help
+            exit 0
+            ;;
+        p)
+            OPT_PROCESS=$OPTARG
+            ;;
+    esac
+done
+
+KILLED=`dadb shell ps | grep -i $OPT_PROCESS`
+
+dadb shell ps | grep -i $OPT_PROCESS | while read PROCESS
+do
+    PID=`echo $PROCESS | awk -F " " '{print $2}'`
+    PNAME=`echo $PROCESS | awk -F " " '{print $9}'`
+    echo -e "\033[31mKilling Proccess --- PID:$PID  PNAME:$PNAME\033[0m"
+    dadb shell kill 9 $PID
+    echo -e "\033[32mDONE!!\033[0m"
+done
+
+if [ ! -n "$KILLED" ]; then
+    echo -e "\nNo process found!!!\n"
+fi

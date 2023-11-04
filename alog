@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# 按Android的进程名打log，并存到文件里
+
+function show_help() {
+    echo ""
+    echo "kill process"
+    echo "Usage:"
+    echo -e "\talog -p [process_name] [-o [out log path]]"
+    echo -e "\tDefault log path: ~/Desktop/log.txt"
+    echo -e "\nExample:"
+    echo -e "\talog -p arservice"
+    echo -e "\talog -p arservice -o ~/Desktop/log1.txt"
+    echo ""
+}
+
+OPT_PROCESS=
+DEFAULT_OUT_LOGFILE=~/Desktop/log.txt
+OUT_LOGFILE=$DEFAULT_OUT_LOGFILE
+FLAG_CLEAR_LOG=
+
+while getopts "hp:o:c" opt; do
+    case "$opt" in
+        h)
+            show_help
+            exit 0
+            ;;
+        p)
+            OPT_PROCESS=$OPTARG
+            ;;
+        o)
+            OUT_LOGFILE=$OPTARG
+            ;;
+        c)
+            dadb logcat -c
+            ;;
+    esac
+done
+
+echo STAR LOGGING
+PID=`dadb shell ps | grep -i $OPT_PROCESS | awk -F " " '{print $2}'`
+
+if [ ! -n "$PID" ]; then
+    echo -e "\nNo process found!!!\n"
+    exit 0
+fi
+
+dadb logcat | tee $OUT_LOGFILE | grep $PID

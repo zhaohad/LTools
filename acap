@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# android的截屏工具，可以支持多display的andoird设备截屏
+
+set -e
+
+echo $SCREENSHOT_PATH_CACHE
+OLD_IFS=$IFS
+IFS="
+"
+DISPLAYS=($(dadb shell dumpsys SurfaceFlinger --display-id))
+
+DISPLAY_ITEM=
+if [ ${#DISPLAYS[*]} -gt 1 ]; then
+    echo "Select one display to capture(input the number): "
+    select DISPLAY_ITEM in ${DISPLAYS[@]}; do
+        break;
+    done
+else
+    DISPLAY_ITEM=${DISPLAYS[0]}
+fi
+IFS=$OLD_IFS
+
+DISPLAY_SEQUENCE=`echo $DISPLAY_ITEM | cut -d ' ' -f 2`
+
+echo "Capturing..."
+DATE=`date '+%Y-%m-%d-%H-%M-%S'`
+SCREENSHOT_NAME="ARScreenShot-"$DATE".png"
+SCREENSHOT_PATH="/sdcard/DCIM/Screenshots/"$SCREENSHOT_NAME
+
+dadb shell screencap -d $DISPLAY_SEQUENCE -p $SCREENSHOT_PATH
+
+OUT_PATH=$1
+if [ ! -n "$OUT_PATH" ]; then
+    OUT_PATH=`pwd`
+fi
+
+OUT_PATH=$OUT_PATH/$SCREENSHOT_NAME
+NONE=`dadb pull $SCREENSHOT_PATH $OUT_PATH`
+
+echo "Screen shot pulled to $OUT_PATH"

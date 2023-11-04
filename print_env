@@ -1,9 +1,19 @@
 #! /bin/bash
 
-cowsay "This terminal is powered by 自由风"
+# cowsay "This terminal is powered by 自由风"
+
+echo "
+       .__                  .__                .___
+_______|  |__ _____    ____ |  |__ _____     __| _/
+\___   /  |  \\__  \  /  _ \|  |  \\__  \   / __ | 
+ /    /|   Y  \/ __ \(  <_> )   Y  \/ __ \_/ /_/ | 
+/_____ \___|  (____  /\____/|___|  (____  /\____ | 
+      \/    \/     \/            \/     \/      \/ "
 
 echo -e "\n"
 
 conda_env=`conda env list | grep "*" | sed '1q' | cut -d ' ' -f 1`
 
 echo "Conda env: $conda_env"
+
+echo -e "\n"

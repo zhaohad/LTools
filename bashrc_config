@@ -1,0 +1,13 @@
+export PATH=/home/zhaohad/bin/LTools:/home/zhaohad/Android/Sdk/platform-tools:/home/zhaohad/.local/bin:$PATH
+BOOT_CMD=$(cat /proc/$$/cmdline | tr -s '\0' ' ')
+BOOT_CMD=$(echo $BOOT_CMD | tr -s ' ')
+if [ "$BOOT_CMD" == "/bin/bash" ]; then
+    conda_env=`env_config conda_default_env`
+    conda activate $conda_env
+fi
+
+PS1="\[\e[1;32m\]自由风\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]$ "
+
+if [ "$BOOT_CMD" == "/bin/bash" ]; then
+    print_env
+fi

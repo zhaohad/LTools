@@ -1,0 +1,104 @@
+#!/bin/bash
+
+function show_help() {
+    echo ""
+    echo "Put your application to launcher's dock"
+    echo "Usage:"
+    echo -e "\tto_launcher -n [Application name] -p [path of the bin file] -i [path of the icon file]"
+    echo -e "\nExample:"
+    echo -e "\tto_launcher -n IntelliJ-IDEA -p idea.sh -i idea.png"
+}
+
+add_to_favorites() {
+    PATH_ETC_FILE=$1
+    FILE_NAME=$(basename $PATH_ETC_FILE)
+    FAVOR_LIST=$(gsettings get org.gnome.shell favorite-apps)
+    FAVOR_LIST=$(echo "$FAVOR_LIST" | tr -d "[]")
+    FAVOR_LIST="[$FAVOR_LIST, '$FILE_NAME']"
+    gsettings set org.gnome.shell favorite-apps "$FAVOR_LIST"
+}
+
+PATH_ETC_DIR="/usr/share/applications"
+PATH_ETC_FILE=
+
+PATH_BIN=
+PATH_ICON=
+APP_NAME=
+PARAM_PATH_BIN=
+PARAM_PATH_ICON=
+
+while getopts "hn:p:i:" opt; do 
+    case "$opt" in
+        h)
+            show_help
+            exit 0
+            ;;
+        n)
+            APP_NAME=$OPTARG
+            ;;
+        p)
+            PARAM_PATH_BIN=$OPTARG
+            ;;
+        i)
+            PARAM_PATH_ICON=$OPTARG
+            ;;
+        ?)
+            show_help
+            exit
+            ;;
+   esac
+done
+
+PATH_BIN=$(readlink -e "$PARAM_PATH_BIN")
+PATH_ICON=$(readlink -e "$PARAM_PATH_ICON")
+
+if [ ! -e "$PATH_BIN" ]; then
+    echo "$PARAM_PATH_BIN file not exists"
+    exit 1
+fi
+
+if [ ! -e "$PATH_ICON" ]; then
+    echo "$PARAM_PATH_ICON file not exists"
+    exit 1
+fi
+
+echo "Set application to launcher dock"
+echo ""
+echo -e "\tApp name: $APP_NAME"
+echo -e "\tBin path: $PATH_BIN"
+echo -e "\tIcon path: $PATH_ICON"
+echo ""
+
+PATH_ETC_FILE="$PATH_ETC_DIR/$APP_NAME.desktop"
+
+PSWD=
+if [ "$(id -u)" != "0" ]; then
+    echo "Script is not running as root. Attempting to use sudo."
+    echo "Type your root password:"
+    read -s PSWD
+    echo ""
+fi
+
+echo $PSWD | sudo -S ls /root > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+    echo "Password is incorrect"
+    exit 1
+fi
+
+echo $PSWD | sudo -S rm -rf $PATH_ETC_FILE
+echo $PSWD | sudo -S touch $PATH_ETC_FILE
+
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "[Desktop Entry]"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Version=1.0"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Type=Application"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Terminal=false"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Icon[zh_CN]=$PATH_ICON"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Name[zh_CN]=$APP_NAME"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Exec=$PATH_BIN"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Comment[zh_CN]=$APP_NAME"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Name=$APP_NAME"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Comment=$APP_NAME"
+echo $PSWD | sudo -S tee -a $PATH_ETC_FILE <<< "Icon=$PATH_ICON"
+
+add_to_favorites $PATH_ETC_FILE

@@ -1,7 +1,39 @@
 #!/bin/bash
 
 # 多个Android设备连接电脑时，直接选取第一个，适用于即连接了有线又连接了无线的Android设备
+devices=$(adb devices -l | grep -v "List of devices attached" | grep -v "^$")
 
-ADB_DEVICE=`adb devices -l | grep 'id' | sed '1q' | cut -d ' ' -f 1`
+if [ -z "$devices" ]; then
+  echo "No device connected !!!"
+  exit 1
+fi
+
+device_count=$(echo "$devices" | wc -l)
+
+if [ "$device_count" -eq 1 ]; then
+  device_id=$(echo "$devices" | awk '{print $1}')
+  ADB_DEVICE=$device_id
+else
+    count=1
+    echo "Device list："
+    echo "$devices" | while read -r line; do
+      if [ -n "$line" ]; then
+        echo "$count. $line"
+        count=$((count + 1))
+      fi
+    done
+    read -p "Input the device number:" device_num
+    ADB_DEVICE=`adb devices -l | sed -n "$((device_num + 1))p" | awk '{print $1}'`
+    if [ -z "$ADB_DEVICE" ]; then
+        echo "Invalid device !!!"
+        exit 1
+    fi
+fi
+
+#ADB_DEVICE=`adb devices -l | grep 'id' | sed '1q' | cut -d ' ' -f 1`
+
+echo "adb -s $ADB_DEVICE $@"
 
 adb -s $ADB_DEVICE $@
+
+#echo $ADB_DEVICE

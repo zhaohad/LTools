@@ -4,7 +4,7 @@
 devices=$(adb devices -l | grep -v "List of devices attached" | grep -v "^$")
 
 if [ -z "$devices" ]; then
-  echo "No device connected !!!"
+  echo "No device connected !!!" >&2
   exit 1
 fi
 
@@ -15,24 +15,24 @@ if [ "$device_count" -eq 1 ]; then
   ADB_DEVICE=$device_id
 else
     count=1
-    echo "Device list："
+    echo "Device list：" >&2
     echo "$devices" | while read -r line; do
       if [ -n "$line" ]; then
-        echo "$count. $line"
+        echo "$count. $line" >&2
         count=$((count + 1))
       fi
     done
     read -p "Input the device number:" device_num
     ADB_DEVICE=`adb devices -l | sed -n "$((device_num + 1))p" | awk '{print $1}'`
     if [ -z "$ADB_DEVICE" ]; then
-        echo "Invalid device !!!"
+        echo "Invalid device !!!" >&2
         exit 1
     fi
 fi
 
 #ADB_DEVICE=`adb devices -l | grep 'id' | sed '1q' | cut -d ' ' -f 1`
 
-echo "adb -s $ADB_DEVICE $@"
+echo "adb -s $ADB_DEVICE $@" >&2
 
 adb -s $ADB_DEVICE $@
 
